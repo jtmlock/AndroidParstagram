@@ -5,6 +5,7 @@ import android.app.Activity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -13,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -22,9 +24,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.parstagram.MainActivity;
 import com.example.parstagram.R;
-import com.example.parstagram.ui.login.LoginViewModel;
-import com.example.parstagram.ui.login.LoginViewModelFactory;
+import com.parse.LogInCallback;
+import com.parse.ParseException;
+import com.parse.ParseUser;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -45,7 +49,7 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                Log.i(TAG, msg: "onClick login button");
+                Log.i(TAG, "onClick login button");
                 String username = etUsername.getText().toString();
                 String password = etPassword.getText().toString();
                 loginUser(username, password);
@@ -54,7 +58,23 @@ public class LoginActivity extends AppCompatActivity {
 
         private void loginUser(String username, String password){
             Log.i(TAG, msg: "Attempting to login user" + username);
-            // TODO : navigate to the main activity if the user has signed in properly
+            ParseUser.logInInBackground(username, password, new LogInCallback() {
+                @Override
+                public void done(ParseUser user, ParseException e) {
+                    if (e != null){
+                        Log.e(TAG, "Issue with login", e);
+                        return;
+                    }
+                    // TODO : navigate to the main activity if the user has signed in properly
+                    goMainActivity();
+                    Toast.makeText(LoginActivity.this, "", Toast.LENGTH_SHORT).show());
+                }
+            });
+        }
+
+        private void goMainActivity(){
+            Intent i = new Intent(this, MainActivity.class);
+            startActivity(i);
         }
 
 
@@ -62,9 +82,9 @@ public class LoginActivity extends AppCompatActivity {
         loginViewModel = ViewModelProviders.of(this, new LoginViewModelFactory())
                 .get(LoginViewModel.class);
 
-        final EditText usernameEditText = findViewById(R.id.username);
-        final EditText passwordEditText = findViewById(R.id.password);
-        final Button loginButton = findViewById(R.id.login);
+        final EditText usernameEditText = findViewById(R.id.etUsername);
+        final EditText passwordEditText = findViewById(R.id.etPassword);
+        final Button loginButton = findViewById(R.id.btnLogin);
         final ProgressBar loadingProgressBar = findViewById(R.id.loading);
 
         loginViewModel.getLoginFormState().observe(this, new Observer<LoginFormState>() {
